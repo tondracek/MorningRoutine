@@ -4,12 +4,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,25 +24,32 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import com.example.morningroutine.R
 import com.example.morningroutine.classes.MorningActivity
 import com.example.morningroutine.classes.Routine
 import com.example.morningroutine.ui.components.MorningActivityView
 import com.example.morningroutine.ui.theme.AppTheme
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RoutineLayout(routine: Routine) {
+    val density = LocalDensity.current
+
     val basicContentColor = MaterialTheme.colorScheme.onPrimaryContainer
     val basicContainerColor = MaterialTheme.colorScheme.primaryContainer
 
@@ -50,23 +60,6 @@ fun RoutineLayout(routine: Routine) {
         mutableStateOf(basicContainerColor)
     }
 
-    fun findNextActivityIndex(): Int {
-        return routine.activities.indexOfFirst { !it.done }
-    }
-
-    fun updateTitleColor(nextActivityIndex: Int) {
-        val nextActivity: MorningActivity? = routine.activities.getOrNull(nextActivityIndex)
-
-        if (nextActivity != null) {
-            contentColor.value = nextActivity.contentColor
-            containerColor.value = nextActivity.color
-        } else {
-            contentColor.value = basicContentColor
-            containerColor.value = basicContainerColor
-        }
-    }
-    updateTitleColor(findNextActivityIndex())
-
     val lazyListState = rememberLazyListState()
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
 
@@ -74,15 +67,41 @@ fun RoutineLayout(routine: Routine) {
         mutableStateOf(0)
     }
 
-    val nextActivity = remember {
-        mutableStateOf(0)
+    val itemSize = 250.dp
+    val itemPadding = 64.dp
+
+    val paddingAroundContent = remember {
+        derivedStateOf {
+            val centerDp = with(density) {
+                lazyListState.layoutInfo.viewportSize.center.y.toDp()
+            }
+
+            (centerDp - itemPadding - itemSize / 2)
+                .coerceAtLeast(0.dp)
+        }
+    }
+
+    fun countDoneActivities(): Int {
+        return routine.activities.count { it.done }
+    }
+
+    var doneActivitiesCount by remember {
+        mutableStateOf(countDoneActivities())
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Morning Routine")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "Morning Routine")
+                        Text(text = "$doneActivitiesCount / ${routine.activities.size}")
+                    }
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     titleContentColor = contentColor.value,
@@ -99,14 +118,11 @@ fun RoutineLayout(routine: Routine) {
             horizontalAlignment = Alignment.CenterHorizontally,
             state = lazyListState,
             flingBehavior = flingBehavior,
+            contentPadding = PaddingValues(
+                top = paddingAroundContent.value,
+                bottom = paddingAroundContent.value,
+            )
         ) {
-            val itemSize = 300.dp
-            val itemPadding = 64.dp
-
-            item {
-                Spacer(modifier = Modifier.height((itemSize + itemPadding) / 2))
-            }
-
             itemsIndexed(routine.activities) { index, activity ->
                 val doneState = remember {
                     mutableStateOf(activity.done)
@@ -115,9 +131,9 @@ fun RoutineLayout(routine: Routine) {
                 val itemScale: Float by animateFloatAsState(
                     targetValue =
                     if (centerItemIndex.value == index) {
-                        1.2f
-                    } else {
                         1f
+                    } else {
+                        0.8f
                     } - if (doneState.value) {
                         0.3f
                     } else {
@@ -128,42 +144,71 @@ fun RoutineLayout(routine: Routine) {
 
                 MorningActivityView(
                     modifier = Modifier
-                        .size(300.dp)
-                        .padding(64.dp)
+                        .padding(itemPadding)
+                        .size(itemSize)
                         .scale(itemScale),
                     activity = activity,
                 ) {
                     activity.done = !activity.done
                     doneState.value = activity.done
-
-                    val nextActivityIndex = findNextActivityIndex()
-                    updateTitleColor(nextActivityIndex)
-                    nextActivity.value = nextActivityIndex
+                    doneActivitiesCount = countDoneActivities()
                 }
             }
+        }
+    }
 
-            item {
-                Spacer(modifier = Modifier.height((itemSize + itemPadding) / 2))
-            }
+    fun setMostCenteredItem(itemsInfo: List<LazyListItemInfo>) {
+        val center = lazyListState.layoutInfo.viewportSize.center.y
+        val mostCenteredItem = itemsInfo.minByOrNull {
+            val pos =
+                lazyListState.layoutInfo.beforeContentPadding + it.offset + it.size / 2
+            abs(center - pos)
+        }
+
+        if (mostCenteredItem != null) {
+            centerItemIndex.value = mostCenteredItem.index
         }
     }
 
     LaunchedEffect(lazyListState) {
         snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo }
             .collect { itemsInfo ->
-                // minus 1 because of the spacer at the beginning
-                centerItemIndex.value = (itemsInfo.first().index + itemsInfo.last().index) / 2 - 1
+                setMostCenteredItem(itemsInfo)
             }
     }
 
-//    LaunchedEffect(nextActivity) {
-//        snapshotFlow { nextActivity.value }
-//            .collect { nextActivityIndex ->
-//                if (nextActivityIndex >= 0 && nextActivityIndex < routine.activities.size) {
-//                    TODO
-//                }
-//            }
-//    }
+    fun updateTitleColor() {
+        val nextActivity = routine.activities.find { !it.done }
+
+        if (nextActivity != null) {
+            contentColor.value = nextActivity.contentColor
+            containerColor.value = nextActivity.color
+        } else {
+            contentColor.value = basicContentColor
+            containerColor.value = basicContainerColor
+        }
+    }
+    updateTitleColor()
+
+    suspend fun scrollToNext() {
+        val actual = centerItemIndex.value
+
+        val nextUndoneActivityIndex = routine.activities
+            .withIndex()
+            .indexOfFirst { (index, activity) -> !activity.done && index >= actual }
+
+        if (nextUndoneActivityIndex >= 0 && nextUndoneActivityIndex <= routine.activities.lastIndex) {
+            lazyListState.animateScrollToItem(nextUndoneActivityIndex)
+        }
+    }
+
+    LaunchedEffect(doneActivitiesCount) {
+        snapshotFlow { doneActivitiesCount }
+            .collect {
+                updateTitleColor()
+                scrollToNext()
+            }
+    }
 }
 
 
@@ -174,44 +219,44 @@ fun RoutineLayoutPrev() {
         val routine = Routine()
             .add(
                 MorningActivity(
-                    name = "Coffee0",
+                    name = "Wash your face",
+                    img = R.drawable.sink,
+                    color = Color(0, 188, 212, 255),
+                )
+            )
+            .add(
+                MorningActivity(
+                    name = "Beard oil",
+                    img = R.drawable.skincare,
+                    color = Color(255, 235, 59, 255),
+                )
+            )
+            .add(
+                MorningActivity(
+                    name = "Vitamins + creatine",
+                    img = R.drawable.suplements,
+                    color = Color(139, 195, 74, 255),
+                )
+            )
+            .add(
+                MorningActivity(
+                    name = "Coffee",
                     img = R.drawable.coffee,
                     color = Color(228, 162, 80, 255),
                 )
             )
             .add(
                 MorningActivity(
-                    name = "Coffee1",
-                    img = R.drawable.coffee,
-                    color = Color(228, 162, 80, 255),
+                    name = "Bathroom",
+                    img = R.drawable.toilet,
+                    color = Color(33, 150, 243, 255),
                 )
             )
             .add(
                 MorningActivity(
-                    name = "Coffee2",
-                    img = R.drawable.coffee,
-                    color = Color(228, 162, 80, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Coffee3",
-                    img = R.drawable.coffee,
-                    color = Color(228, 162, 80, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Coffee4",
-                    img = R.drawable.coffee,
-                    color = Color(228, 162, 80, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Meditation",
-                    img = R.drawable.meditation,
-                    color = Color(129, 252, 129, 255),
+                    name = "Breakfast",
+                    img = R.drawable.breakfast,
+                    color = Color(255, 87, 34, 255),
                 )
             )
 

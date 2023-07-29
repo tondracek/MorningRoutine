@@ -21,6 +21,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.morningroutine.R
 import com.example.morningroutine.classes.MorningActivity
 import com.example.morningroutine.ui.theme.AppTheme
@@ -67,7 +68,8 @@ fun MorningActivityView(
                 text = activity.name,
                 style = TextStyle(
                     color = activity.contentColor,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 ),
             )
         }
