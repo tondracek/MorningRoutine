@@ -9,6 +9,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.morningroutine.ui.layout.EditRoutineLayout
+import com.example.morningroutine.ui.layout.RoutineLayout
 import com.example.morningroutine.ui.layout.RoutineLayoutPrev
 import com.example.morningroutine.ui.theme.AppTheme
 
@@ -17,7 +22,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppTheme {
-                RoutineLayoutPrev()
+                val navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "morningRoutineLayout"
+                ) {
+                    composable("morningRoutineLayout") {
+                        RoutineLayout(navController = navController)
+                    }
+                    composable("editMorningRoutineLayout") {
+                        EditRoutineLayout(navController = navController)
+                    }
+                }
             }
         }
     }

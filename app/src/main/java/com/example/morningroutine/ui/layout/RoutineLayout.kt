@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +14,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,10 +37,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.morningroutine.R
 import com.example.morningroutine.classes.MorningActivity
 import com.example.morningroutine.classes.Routine
@@ -47,17 +55,10 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun RoutineLayout(routine: Routine) {
+fun RoutineLayout(navController: NavController) {
     val density = LocalDensity.current
-
-    val basicContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val basicContainerColor = MaterialTheme.colorScheme.primaryContainer
-
-    val contentColor = remember {
-        mutableStateOf(basicContentColor)
-    }
-    val containerColor = remember {
-        mutableStateOf(basicContainerColor)
+    val routine by remember {
+        mutableStateOf(loadMorningRoutine())
     }
 
     val lazyListState = rememberLazyListState()
@@ -89,18 +90,35 @@ fun RoutineLayout(routine: Routine) {
         mutableStateOf(countDoneActivities())
     }
 
+    val basicContentColor = MaterialTheme.colorScheme.onPrimary
+    val basicContainerColor = MaterialTheme.colorScheme.primary
+
+    val contentColor = remember(doneActivitiesCount) {
+        derivedStateOf {
+            routine.activities.find { !it.done }?.contentColor ?: basicContentColor
+        }
+    }
+    val containerColor = remember(doneActivitiesCount) {
+        derivedStateOf {
+            routine.activities.find { !it.done }?.containerColor ?: basicContainerColor
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Morning Routine")
-                        Text(text = "$doneActivitiesCount / ${routine.activities.size}")
+                    Text(text = "Morning Routine")
+                },
+                actions = {
+                    IconButton(onClick = {
+                        navController.navigate("editMorningRoutineLayout")
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_edit_24),
+                            contentDescription = "Edit the morning routine",
+                            tint = contentColor.value,
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
@@ -109,6 +127,34 @@ fun RoutineLayout(routine: Routine) {
                 ),
             )
         },
+        bottomBar = {
+            BottomAppBar(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier.padding(16.dp),
+                        text = "$doneActivitiesCount/${routine.activities.size}",
+                        style = TextStyle(fontWeight = FontWeight.Bold),
+                    )
+                    val progressAnimationValue by animateFloatAsState(
+                        targetValue = doneActivitiesCount.toFloat() / routine.activities.size,
+                        label = "progressAnimationValue"
+                    )
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        progress = progressAnimationValue,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        trackColor = MaterialTheme.colorScheme.onTertiary,
+                    )
+                }
+            }
+        }
     ) { scaffoldPadding ->
         LazyColumn(
             modifier = Modifier
@@ -123,7 +169,12 @@ fun RoutineLayout(routine: Routine) {
                 bottom = paddingAroundContent.value,
             )
         ) {
-            itemsIndexed(routine.activities) { index, activity ->
+            itemsIndexed(
+                items = routine.activities,
+                key = { index, _ ->
+                    index
+                },
+            ) { index, activity ->
                 val doneState = remember {
                     mutableStateOf(activity.done)
                 }
@@ -149,7 +200,6 @@ fun RoutineLayout(routine: Routine) {
                         .scale(itemScale),
                     activity = activity,
                 ) {
-                    activity.done = !activity.done
                     doneState.value = activity.done
                     doneActivitiesCount = countDoneActivities()
                 }
@@ -177,19 +227,6 @@ fun RoutineLayout(routine: Routine) {
             }
     }
 
-    fun updateTitleColor() {
-        val nextActivity = routine.activities.find { !it.done }
-
-        if (nextActivity != null) {
-            contentColor.value = nextActivity.contentColor
-            containerColor.value = nextActivity.color
-        } else {
-            contentColor.value = basicContentColor
-            containerColor.value = basicContainerColor
-        }
-    }
-    updateTitleColor()
-
     suspend fun scrollToNext() {
         val actual = centerItemIndex.value
 
@@ -205,61 +242,61 @@ fun RoutineLayout(routine: Routine) {
     LaunchedEffect(doneActivitiesCount) {
         snapshotFlow { doneActivitiesCount }
             .collect {
-                updateTitleColor()
                 scrollToNext()
             }
     }
 }
 
+fun loadMorningRoutine(): Routine {
+    return Routine()
+        .add(
+            MorningActivity(
+                name = "Wash your face",
+                img = R.drawable.sink,
+                containerColor = Color(0, 188, 212, 255),
+            )
+        )
+        .add(
+            MorningActivity(
+                name = "Beard oil",
+                img = R.drawable.skincare,
+                containerColor = Color(255, 235, 59, 255),
+            )
+        )
+        .add(
+            MorningActivity(
+                name = "Vitamins + creatine",
+                img = R.drawable.suplements,
+                containerColor = Color(139, 195, 74, 255),
+            )
+        )
+        .add(
+            MorningActivity(
+                name = "Coffee",
+                img = R.drawable.coffee,
+                containerColor = Color(228, 162, 80, 255),
+            )
+        )
+        .add(
+            MorningActivity(
+                name = "Bathroom",
+                img = R.drawable.toilet,
+                containerColor = Color(33, 150, 243, 255),
+            )
+        )
+        .add(
+            MorningActivity(
+                name = "Breakfast",
+                img = R.drawable.breakfast,
+                containerColor = Color(255, 87, 34, 255),
+            )
+        )
+}
 
 @Preview
 @Composable
 fun RoutineLayoutPrev() {
     AppTheme {
-        val routine = Routine()
-            .add(
-                MorningActivity(
-                    name = "Wash your face",
-                    img = R.drawable.sink,
-                    color = Color(0, 188, 212, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Beard oil",
-                    img = R.drawable.skincare,
-                    color = Color(255, 235, 59, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Vitamins + creatine",
-                    img = R.drawable.suplements,
-                    color = Color(139, 195, 74, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Coffee",
-                    img = R.drawable.coffee,
-                    color = Color(228, 162, 80, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Bathroom",
-                    img = R.drawable.toilet,
-                    color = Color(33, 150, 243, 255),
-                )
-            )
-            .add(
-                MorningActivity(
-                    name = "Breakfast",
-                    img = R.drawable.breakfast,
-                    color = Color(255, 87, 34, 255),
-                )
-            )
-
-        RoutineLayout(routine = routine)
+        RoutineLayout(NavController(LocalContext.current))
     }
 }

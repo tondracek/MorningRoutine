@@ -10,8 +10,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,7 +34,7 @@ fun MorningActivityView(
     activity: MorningActivity,
     updateParent: () -> Unit
 ) {
-    val done = remember {
+    var done by remember {
         mutableStateOf(activity.done)
     }
 
@@ -40,14 +42,16 @@ fun MorningActivityView(
         modifier = modifier
             .aspectRatio(1f)
             .clickable {
-                done.value = !done.value
+                activity.done = !activity.done
+
+                done = activity.done
                 updateParent()
             },
         colors =
-        if (done.value) {
+        if (done) {
             CardDefaults.cardColors(MorningActivity.disabledColor)
         } else {
-            CardDefaults.cardColors(activity.color)
+            CardDefaults.cardColors(activity.containerColor)
         },
         elevation = CardDefaults.cardElevation(32.dp),
     ) {
@@ -85,7 +89,7 @@ fun MorningActivityViewPrev() {
             activity = MorningActivity(
                 name = "Meditation",
                 img = R.drawable.meditation,
-                color = Color(129, 252, 129, 255),
+                containerColor = Color(129, 252, 129, 255),
             )
         ) {}
     }
