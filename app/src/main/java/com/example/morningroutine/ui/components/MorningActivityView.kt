@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -49,9 +50,9 @@ fun MorningActivityView(
             },
         colors =
         if (done) {
-            CardDefaults.cardColors(MorningActivity.disabledColor)
+            CardDefaults.cardColors(MorningActivity.getDisabledColor())
         } else {
-            CardDefaults.cardColors(activity.containerColor)
+            CardDefaults.cardColors(activity.getContainerColor())
         },
         elevation = CardDefaults.cardElevation(32.dp),
     ) {
@@ -65,13 +66,13 @@ fun MorningActivityView(
                 modifier = Modifier.weight(1f),
                 painter = painterResource(id = activity.img),
                 contentDescription = activity.name,
-                colorFilter = ColorFilter.tint(activity.contentColor),
+                colorFilter = ColorFilter.tint(activity.getContentColor()),
             )
             Text(
                 modifier = Modifier.padding(4.dp),
                 text = activity.name,
                 style = TextStyle(
-                    color = activity.contentColor,
+                    color = activity.getContentColor(),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 ),
@@ -89,7 +90,7 @@ fun MorningActivityViewPrev() {
             activity = MorningActivity(
                 name = "Meditation",
                 img = R.drawable.meditation,
-                containerColor = Color(129, 252, 129, 255),
+                containerColor = Color(129, 252, 129, 255).toArgb(),
             )
         ) {}
     }

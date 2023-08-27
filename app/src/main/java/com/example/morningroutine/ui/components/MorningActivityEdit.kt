@@ -21,11 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.zIndex
 import com.example.morningroutine.R
 import com.example.morningroutine.classes.MorningActivity
@@ -54,8 +54,8 @@ fun MorningActivityEdit(
             openEditPopup.value = true
         },
         colors = CardDefaults.cardColors(
-            containerColor = activity.containerColor,
-            contentColor = activity.contentColor,
+            containerColor = activity.getContainerColor(),
+            contentColor = activity.getContentColor(),
         ),
         elevation = CardDefaults.cardElevation(16.dp)
     ) {
@@ -142,7 +142,7 @@ fun MorningActivityEditPrev() {
             activity = MorningActivity(
                 name = "Meditation",
                 img = R.drawable.meditation,
-                containerColor = Color(129, 252, 129, 255),
+                containerColor = Color(129, 252, 129, 255).toArgb(),
             ),
             moveDownInList = {},
         ) {}

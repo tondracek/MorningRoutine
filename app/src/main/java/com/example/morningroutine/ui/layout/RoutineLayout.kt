@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.morningroutine.R
-import com.example.morningroutine.classes.Routine
+import com.example.morningroutine.classes.Routine.Companion.loadRoutine
 import com.example.morningroutine.ui.components.MorningActivityView
 import com.example.morningroutine.ui.theme.AppTheme
 import kotlin.math.abs
@@ -58,9 +58,8 @@ fun RoutineLayout(navController: NavController) {
     val density = LocalDensity.current
     val context = LocalContext.current
 
-    val routine = Routine.loadRoutine(context)
     val routineActivities = remember {
-        routine.activities
+        loadRoutine(context).activities
     }
 
     val lazyListState = rememberLazyListState()
@@ -97,12 +96,12 @@ fun RoutineLayout(navController: NavController) {
 
     val contentColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routineActivities.find { !it.done }?.contentColor ?: basicContentColor
+            routineActivities.find { !it.done }?.getContentColor() ?: basicContentColor
         }
     }
     val containerColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routineActivities.find { !it.done }?.containerColor ?: basicContainerColor
+            routineActivities.find { !it.done }?.getContainerColor() ?: basicContainerColor
         }
     }
 

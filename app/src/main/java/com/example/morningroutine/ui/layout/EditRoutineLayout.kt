@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.morningroutine.R
+import com.example.morningroutine.classes.MorningActivity
 import com.example.morningroutine.classes.Routine
 import com.example.morningroutine.ui.components.MorningActivityEdit
 import com.example.morningroutine.ui.theme.AppTheme
@@ -57,7 +58,10 @@ fun EditRoutineLayout(navController: NavController) {
                 actions = {
                     IconButton(
                         onClick = {
-                            Routine.saveRoutine(routine, context)
+                            Routine.saveRoutine(
+                                routine = Routine(ArrayList<MorningActivity>(routineActivities)),
+                                context = context
+                            )
                             navController.popBackStack()
                         },
                     ) {
