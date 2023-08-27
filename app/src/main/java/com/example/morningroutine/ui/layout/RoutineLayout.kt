@@ -36,9 +36,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.morningroutine.R
-import com.example.morningroutine.classes.MorningActivity
 import com.example.morningroutine.classes.Routine
 import com.example.morningroutine.ui.components.MorningActivityView
 import com.example.morningroutine.ui.theme.AppTheme
@@ -57,8 +56,11 @@ import kotlin.math.abs
 @Composable
 fun RoutineLayout(navController: NavController) {
     val density = LocalDensity.current
-    val routine by remember {
-        mutableStateOf(loadMorningRoutine())
+    val context = LocalContext.current
+
+    val routine = Routine.loadRoutine(context)
+    val routineActivities = remember {
+        routine.activities
     }
 
     val lazyListState = rememberLazyListState()
@@ -83,7 +85,7 @@ fun RoutineLayout(navController: NavController) {
     }
 
     fun countDoneActivities(): Int {
-        return routine.activities.count { it.done }
+        return routineActivities.count { it.done }
     }
 
     var doneActivitiesCount by remember {
@@ -95,12 +97,12 @@ fun RoutineLayout(navController: NavController) {
 
     val contentColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routine.activities.find { !it.done }?.contentColor ?: basicContentColor
+            routineActivities.find { !it.done }?.contentColor ?: basicContentColor
         }
     }
     val containerColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routine.activities.find { !it.done }?.containerColor ?: basicContainerColor
+            routineActivities.find { !it.done }?.containerColor ?: basicContainerColor
         }
     }
 
@@ -136,12 +138,18 @@ fun RoutineLayout(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        modifier = Modifier.padding(16.dp),
-                        text = "$doneActivitiesCount/${routine.activities.size}",
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .testTag("progressText"),
+                        text = "$doneActivitiesCount/${routineActivities.size}",
                         style = TextStyle(fontWeight = FontWeight.Bold),
                     )
                     val progressAnimationValue by animateFloatAsState(
-                        targetValue = doneActivitiesCount.toFloat() / routine.activities.size,
+                        targetValue =
+                        if (routineActivities.isNotEmpty())
+                            doneActivitiesCount.toFloat() / routineActivities.size
+                        else
+                            0f,
                         label = "progressAnimationValue"
                     )
                     LinearProgressIndicator(
@@ -170,7 +178,7 @@ fun RoutineLayout(navController: NavController) {
             )
         ) {
             itemsIndexed(
-                items = routine.activities,
+                items = routineActivities,
                 key = { index, _ ->
                     index
                 },
@@ -197,7 +205,8 @@ fun RoutineLayout(navController: NavController) {
                     modifier = Modifier
                         .padding(itemPadding)
                         .size(itemSize)
-                        .scale(itemScale),
+                        .scale(itemScale)
+                        .testTag("activityCard"),
                     activity = activity,
                 ) {
                     doneState.value = activity.done
@@ -230,11 +239,11 @@ fun RoutineLayout(navController: NavController) {
     suspend fun scrollToNext() {
         val actual = centerItemIndex.value
 
-        val nextUndoneActivityIndex = routine.activities
+        val nextUndoneActivityIndex = routineActivities
             .withIndex()
             .indexOfFirst { (index, activity) -> !activity.done && index >= actual }
 
-        if (nextUndoneActivityIndex >= 0 && nextUndoneActivityIndex <= routine.activities.lastIndex) {
+        if (nextUndoneActivityIndex >= 0 && nextUndoneActivityIndex <= routineActivities.lastIndex) {
             lazyListState.animateScrollToItem(nextUndoneActivityIndex)
         }
     }
@@ -245,52 +254,6 @@ fun RoutineLayout(navController: NavController) {
                 scrollToNext()
             }
     }
-}
-
-fun loadMorningRoutine(): Routine {
-    return Routine()
-        .add(
-            MorningActivity(
-                name = "Wash your face",
-                img = R.drawable.sink,
-                containerColor = Color(0, 188, 212, 255),
-            )
-        )
-        .add(
-            MorningActivity(
-                name = "Beard oil",
-                img = R.drawable.skincare,
-                containerColor = Color(255, 235, 59, 255),
-            )
-        )
-        .add(
-            MorningActivity(
-                name = "Vitamins + creatine",
-                img = R.drawable.suplements,
-                containerColor = Color(139, 195, 74, 255),
-            )
-        )
-        .add(
-            MorningActivity(
-                name = "Coffee",
-                img = R.drawable.coffee,
-                containerColor = Color(228, 162, 80, 255),
-            )
-        )
-        .add(
-            MorningActivity(
-                name = "Bathroom",
-                img = R.drawable.toilet,
-                containerColor = Color(33, 150, 243, 255),
-            )
-        )
-        .add(
-            MorningActivity(
-                name = "Breakfast",
-                img = R.drawable.breakfast,
-                containerColor = Color(255, 87, 34, 255),
-            )
-        )
 }
 
 @Preview

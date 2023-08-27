@@ -18,6 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,29 +28,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.morningroutine.R
+import com.example.morningroutine.classes.Routine
 import com.example.morningroutine.ui.components.MorningActivityEdit
 import com.example.morningroutine.ui.theme.AppTheme
-import org.burnoutcrew.reorderable.detectReorderAfterLongPress
-import org.burnoutcrew.reorderable.rememberReorderableLazyListState
-import org.burnoutcrew.reorderable.reorderable
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditRoutineLayout(navController: NavController) {
+    val context = LocalContext.current
+    val routine = Routine.loadRoutine(context)
 
-    val morningActivities = loadMorningRoutine().activities.toMutableList()
+    val routineActivities = remember {
+        mutableStateListOf(*routine.activities.toTypedArray())
+    }
 
     val lazyListState = rememberLazyListState()
     val flingBehavior = rememberSnapFlingBehavior(lazyListState = lazyListState)
 
     val itemSize = 64.dp
     val itemPadding = 16.dp
-
-    val state = rememberReorderableLazyListState(
-        onMove = { a, b ->
-            morningActivities.swap(a.index, b.index)
-        }
-    )
 
     Scaffold(
         topBar = {
@@ -59,7 +57,8 @@ fun EditRoutineLayout(navController: NavController) {
                 actions = {
                     IconButton(
                         onClick = {
-                            // TODO
+                            Routine.saveRoutine(routine, context)
+                            navController.popBackStack()
                         },
                     ) {
                         Icon(
@@ -80,26 +79,34 @@ fun EditRoutineLayout(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(scaffoldPadding)
-                .background(MaterialTheme.colorScheme.background)
-                .reorderable(
-                    state = state,
-                ),
+                .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally,
             state = lazyListState,
             flingBehavior = flingBehavior,
         ) {
             itemsIndexed(
-                items = morningActivities,
-                key = { index, _ ->
-                    index
-                },
-            ) { _, activity ->
+                items = routineActivities,
+                key = { index, _ -> index },
+            ) { index, activity ->
                 MorningActivityEdit(
                     modifier = Modifier
                         .padding(itemPadding)
-                        .height(itemSize)
-                        .detectReorderAfterLongPress(state = state),
+                        .height(itemSize),
                     activity = activity,
+                    moveDownInList = {
+                        if (index > 0) {
+                            val temp = routineActivities[index - 1]
+                            routineActivities[index - 1] = routineActivities[index]
+                            routineActivities[index] = temp
+                        }
+                    },
+                    moveUpInList = {
+                        if (index < routineActivities.lastIndex) {
+                            val temp = routineActivities[index + 1]
+                            routineActivities[index + 1] = routineActivities[index]
+                            routineActivities[index] = temp
+                        }
+                    },
                 )
             }
         }
@@ -112,14 +119,4 @@ fun EditRoutineLayoutPrev() {
     AppTheme {
         EditRoutineLayout(navController = NavController(LocalContext.current))
     }
-}
-
-fun <T> MutableList<T>.swap(index1: Int, index2: Int) {
-    if (index1 < 0 || index1 >= size || index2 < 0 || index2 >= size) {
-        throw IndexOutOfBoundsException("Indices out of bounds.")
-    }
-
-    val temp = this[index1]
-    this[index1] = this[index2]
-    this[index2] = temp
 }

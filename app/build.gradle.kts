@@ -71,6 +71,4 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("androidx.navigation:navigation-compose:2.6.0")
-
-    implementation("org.burnoutcrew.composereorderable:reorderable:0.9.6")
 }

@@ -32,7 +32,7 @@ import com.example.morningroutine.ui.theme.AppTheme
 fun MorningActivityView(
     modifier: Modifier = Modifier,
     activity: MorningActivity,
-    updateParent: () -> Unit
+    updateParent: () -> Unit,
 ) {
     var done by remember {
         mutableStateOf(activity.done)
