@@ -65,52 +65,8 @@ fun MorningActivityEdit(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val swapPositionPopup = remember {
-                mutableStateOf(false)
-            }
-            IconButton(
-                onClick = {
-                    swapPositionPopup.value = true
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_swap_vert_24),
-                    contentDescription = "Swap activity order"
-                )
-                if (swapPositionPopup.value) {
-                    Popup(
-                        alignment = Alignment.Center,
-                        onDismissRequest = { swapPositionPopup.value = false },
-                    ) {
-                        Card(
-                            modifier = modifier
-                                .zIndex(1f)
-                                .wrapContentSize(unbounded = true)
-                        ) {
-                            Column {
-                                IconButton(onClick = {
-                                    moveDownInList()
-                                    swapPositionPopup.value = false
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.outline_arrow_drop_up_24),
-                                        contentDescription = "Move activity up"
-                                    )
-                                }
-                                IconButton(onClick = {
-                                    moveUpInList()
-                                    swapPositionPopup.value = false
-                                }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.outline_arrow_drop_down_24),
-                                        contentDescription = "Move activity down"
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            PositionSwapButton(moveDownInList, moveUpInList)
+
             Text(
                 text = activity.name,
             )
@@ -118,6 +74,60 @@ fun MorningActivityEdit(
                 painter = painterResource(id = activity.img),
                 contentDescription = "Morning activity's image",
             )
+        }
+    }
+}
+
+@Composable
+fun PositionSwapButton(
+    moveDownInList: () -> Unit,
+    moveUpInList: () -> Unit,
+) {
+    val swapPositionPopup = remember {
+        mutableStateOf(false)
+    }
+
+    IconButton(
+        onClick = {
+            swapPositionPopup.value = true
+        }
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.outline_swap_vert_24),
+            contentDescription = "Swap activity order"
+        )
+        if (swapPositionPopup.value) {
+            Popup(
+                alignment = Alignment.Center,
+                onDismissRequest = { swapPositionPopup.value = false },
+            ) {
+                Card(
+                    modifier = Modifier
+                        .zIndex(1f)
+                        .wrapContentSize(unbounded = true)
+                ) {
+                    Column {
+                        IconButton(onClick = {
+                            moveDownInList()
+                            swapPositionPopup.value = false
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_arrow_drop_up_24),
+                                contentDescription = "Move activity up"
+                            )
+                        }
+                        IconButton(onClick = {
+                            moveUpInList()
+                            swapPositionPopup.value = false
+                        }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_arrow_drop_down_24),
+                                contentDescription = "Move activity down"
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
