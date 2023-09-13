@@ -71,7 +71,7 @@ fun MorningActivityEdit(
                 text = activity.name,
             )
             Icon(
-                painter = painterResource(id = activity.img),
+                painter = painterResource(id = activity.getIcon()),
                 contentDescription = "Morning activity's image",
             )
         }
@@ -142,7 +142,7 @@ fun MorningActivityEditPrev() {
                 .width(256.dp),
             activity = MorningActivity(
                 name = "Meditation",
-                img = R.drawable.meditation,
+                icon = R.drawable.meditation,
                 containerColor = Color(129, 252, 129, 255).toArgb(),
             ),
             moveDownInList = {},

@@ -16,8 +16,6 @@ class Routine(var activities: List<MorningActivity> = arrayListOf()) : Serializa
     companion object {
         private const val FILENAME = "routine.bin"
         fun loadRoutine(context: Context): Routine {
-            println("LOADING")
-
             val file = File(context.filesDir, FILENAME)
 
             try {
@@ -55,32 +53,32 @@ class Routine(var activities: List<MorningActivity> = arrayListOf()) : Serializa
             arrayListOf(
                 MorningActivity(
                     name = "Wash your face",
-                    img = R.drawable.sink,
+                    icon = R.drawable.sink,
                     containerColor = Color(0, 188, 212, 255).toArgb(),
                 ),
                 MorningActivity(
                     name = "Beard oil",
-                    img = R.drawable.skincare,
+                    icon = R.drawable.skincare,
                     containerColor = Color(255, 235, 59, 255).toArgb(),
                 ),
                 MorningActivity(
                     name = "Vitamins + creatine",
-                    img = R.drawable.suplements,
+                    icon = R.drawable.suplements,
                     containerColor = Color(139, 195, 74, 255).toArgb(),
                 ),
                 MorningActivity(
                     name = "Coffee",
-                    img = R.drawable.coffee,
+                    icon = R.drawable.coffee,
                     containerColor = Color(228, 162, 80, 255).toArgb(),
                 ),
                 MorningActivity(
                     name = "Bathroom",
-                    img = R.drawable.toilet,
+                    icon = R.drawable.toilet,
                     containerColor = Color(33, 150, 243, 255).toArgb(),
                 ),
                 MorningActivity(
                     name = "Breakfast",
-                    img = R.drawable.breakfast,
+                    icon = R.drawable.breakfast,
                     containerColor = Color(255, 87, 34, 255).toArgb(),
                 )
             )

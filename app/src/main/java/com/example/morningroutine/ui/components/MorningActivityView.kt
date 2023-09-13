@@ -64,7 +64,7 @@ fun MorningActivityView(
         ) {
             Image(
                 modifier = Modifier.weight(1f),
-                painter = painterResource(id = activity.img),
+                painter = painterResource(id = activity.getIcon()),
                 contentDescription = activity.name,
                 colorFilter = ColorFilter.tint(activity.getContentColor()),
             )
@@ -89,7 +89,7 @@ fun MorningActivityViewPrev() {
         MorningActivityView(
             activity = MorningActivity(
                 name = "Meditation",
-                img = R.drawable.meditation,
+                icon = R.drawable.meditation,
                 containerColor = Color(129, 252, 129, 255).toArgb(),
             )
         ) {}
