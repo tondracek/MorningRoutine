@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,29 +31,10 @@ fun ActivityIconsPopup(
     openEditPopup: MutableState<Boolean>,
     selectedColor: Color,
 ) {
-    val iconIDs = arrayOf(
-        R.drawable.breakfast,
-        R.drawable.cleaning,
-        R.drawable.closet,
-        R.drawable.coffee,
-        R.drawable.drink_water,
-        R.drawable.friends,
-        R.drawable.journal,
-        R.drawable.medicine,
-        R.drawable.meditation,
-        R.drawable.mewing,
-        R.drawable.reading,
-        R.drawable.shower,
-        R.drawable.sink,
-        R.drawable.skincare,
-        R.drawable.suplements,
-        R.drawable.toilet,
-        R.drawable.toothbrush,
-        R.drawable.workout,
-    )
+    val iconIDs = arrayOf(R.drawable.baseline_android_24)
 
     var newID: Int by remember {
-        mutableStateOf(iconID.value)
+        mutableIntStateOf(iconID.value)
     }
 
     AlertDialog(
@@ -108,7 +90,7 @@ fun ActivityIconsPopupPrev() {
     AppTheme {
         ActivityIconsPopup(
             iconID = remember {
-                mutableStateOf(R.drawable.drink_water)
+                mutableIntStateOf(R.drawable.baseline_android_24)
             },
             openEditPopup = remember {
                 mutableStateOf(true)

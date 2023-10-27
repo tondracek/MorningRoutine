@@ -47,9 +47,10 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.morningroutine.R
-import com.example.morningroutine.classes.Routine.Companion.loadRoutine
-import com.example.morningroutine.ui.components.MorningActivityView
+import com.example.morningroutine.data.RoutineLoader.loadRoutine
 import com.example.morningroutine.ui.theme.AppTheme
+import com.example.morningroutine.ui.views.MorningActivityView
+import com.example.morningroutine.ui.views.RoutineView
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -58,8 +59,8 @@ fun RoutineLayout(navController: NavController) {
     val density = LocalDensity.current
     val context = LocalContext.current
 
-    val routineActivities = remember {
-        loadRoutine(context).activities
+    val routine by remember {
+        mutableStateOf(loadRoutine(context))
     }
 
     val lazyListState = rememberLazyListState()
@@ -96,12 +97,12 @@ fun RoutineLayout(navController: NavController) {
 
     val contentColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routineActivities.find { !it.done }?.getContentColor() ?: basicContentColor
+            routineActivities.find { !it.done }?.contentColor ?: basicContentColor
         }
     }
     val containerColor = remember(doneActivitiesCount) {
         derivedStateOf {
-            routineActivities.find { !it.done }?.getContainerColor() ?: basicContainerColor
+            routineActivities.find { !it.done }?.containerColor ?: basicContainerColor
         }
     }
 
@@ -163,6 +164,13 @@ fun RoutineLayout(navController: NavController) {
             }
         }
     ) { scaffoldPadding ->
+        RoutineView(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(scaffoldPadding)
+                .background(MaterialTheme.colorScheme.background),
+            routine = routine,
+        )
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -206,7 +214,7 @@ fun RoutineLayout(navController: NavController) {
                         .size(itemSize)
                         .scale(itemScale)
                         .testTag("activityCard"),
-                    activity = activity,
+                    morningActivity = activity,
                 ) {
                     doneState.value = activity.done
                     doneActivitiesCount = countDoneActivities()

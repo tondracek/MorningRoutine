@@ -12,7 +12,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.morningroutine.ui.layout.EditRoutineLayout
 import com.example.morningroutine.ui.layout.RoutineLayout
 import com.example.morningroutine.ui.layout.RoutineLayoutPrev
 import com.example.morningroutine.ui.theme.AppTheme
@@ -30,9 +29,9 @@ class MainActivity : ComponentActivity() {
                     composable("morningRoutineLayout") {
                         RoutineLayout(navController = navController)
                     }
-                    composable("editMorningRoutineLayout") {
-                        EditRoutineLayout(navController = navController)
-                    }
+//                    composable("editMorningRoutineLayout") {
+//                        EditRoutineLayout(navController = navController)
+//                    }
                 }
             }
         }
