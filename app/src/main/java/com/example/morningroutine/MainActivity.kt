@@ -3,50 +3,52 @@ package com.example.morningroutine
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.morningroutine.ui.layout.RoutineLayout
-import com.example.morningroutine.ui.layout.RoutineLayoutPrev
+import com.example.morningroutine.domain.crud.FakeCRUD
+import com.example.morningroutine.ui.Screen
+import com.example.morningroutine.ui.createViewModelFactory
+import com.example.morningroutine.ui.routinesessionscreen.RoutineSessionScreen
+import com.example.morningroutine.ui.routinesessionscreen.RoutineSessionViewModel
 import com.example.morningroutine.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val morningRoutineCRUD = FakeCRUD()
+
         setContent {
             AppTheme {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "morningRoutineLayout"
+                    startDestination = Screen.RoutineSession.route
                 ) {
-                    composable("morningRoutineLayout") {
-                        RoutineLayout(navController = navController)
+
+                    composable(
+                        route = Screen.RoutineSession.route
+                    ) {
+                        val viewModel by viewModels<RoutineSessionViewModel> {
+                            RoutineSessionViewModel(
+                                morningRoutineCRUD = morningRoutineCRUD,
+                                navController = navController
+                            ).createViewModelFactory()
+                        }
+
+                        val state by viewModel.state.collectAsState()
+
+                        RoutineSessionScreen(
+                            state = state,
+                            onEvent = viewModel::onEvent
+                        )
                     }
-//                    composable("editMorningRoutineLayout") {
-//                        EditRoutineLayout(navController = navController)
-//                    }
                 }
             }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainActivityPreview() {
-    AppTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.primaryContainer
-        ) {
-            RoutineLayoutPrev()
         }
     }
 }
